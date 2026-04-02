@@ -39,42 +39,51 @@
 
         input { max-width: 100%; font-size: 16px; }
 
-        /* Sticky Header Section */
+        /* Fixed Header Section */
         .top-nav {
-            position: sticky;
+            position: fixed;
             top: 0;
-            z-index: 100;
+            left: 0;
+            right: 0;
+            z-index: 1000;
             background: var(--md-sys-color-primary);
             color: white;
-            padding: 12px 16px;
-            box-shadow: var(--shadow-2);
+            padding: 0 16px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .top-nav h1 {
             margin: 0;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
             text-align: center;
         }
 
         .search-container {
-            position: sticky;
-            top: 48px; /* Below top-nav */
-            z-index: 90;
+            position: fixed;
+            top: 44px; /* Exactly below top-nav */
+            left: 0;
+            right: 0;
+            z-index: 999;
             background: #f4f7fa;
-            padding: 12px 16px;
+            padding: 6px 16px;
+            box-shadow: 0 4px 6px -2px rgba(0,0,0,0.1);
         }
 
         .search-bar {
             width: 100%;
             max-width: 100%;
-            padding: 12px 20px;
+            padding: 4px 16px;
             border: 2px solid var(--md-sys-color-outline);
             border-radius: 28px;
-            font-size: 16px;
+            font-size: 14px;
             background: white;
             color: black;
             font-weight: 600;
+            height: 36px;
         }
 
         .search-bar:focus {
@@ -85,7 +94,7 @@
 
         /* Container & Grid */
         .content {
-            padding: 0 16px 180px 16px; /* Balanced space for the new compact footer */
+            padding: 100px 16px 180px 16px; /* Offset for fixed headers (44 + 48 approx) */
             max-width: 600px;
             margin: 0 auto;
         }
@@ -94,7 +103,7 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             background: white;
             padding: 12px;
             border-radius: 16px;
@@ -129,13 +138,13 @@
         .product-list {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 6px;
         }
 
         .product-card {
             background: white;
-            border-radius: 16px;
-            padding: 16px;
+            border-radius: 12px;
+            padding: 8px;
             box-shadow: var(--shadow-1);
             border: 1px solid #e0e0e0;
         }
@@ -143,46 +152,47 @@
         .card-header {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 12px;
+            align-items: center;
+            margin-bottom: 4px;
             gap: 8px;
         }
 
         .product-name {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 900;
             color: var(--md-sys-color-primary);
             margin: 0;
             flex: 1;
             word-break: break-word;
+            line-height: 1.2;
         }
 
         .item-total {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 900;
             color: #000;
             background: #eef2f6;
-            padding: 4px 10px;
+            padding: 2px 8px;
             border-radius: 8px;
             white-space: nowrap;
         }
 
         .price-info {
-            font-size: 12px;
+            font-size: 11px;
             color: #555;
             font-weight: 600;
-            margin-bottom: 12px;
+            margin-bottom: 4px;
         }
 
         .interaction-row {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             width: 100%;
         }
 
         .qty-box {
             background: #f8f9fa;
-            padding: 6px;
+            padding: 4px;
             border-radius: 12px;
             text-align: center;
             border: 1px solid #eee;
@@ -191,11 +201,12 @@
         }
 
         .qty-label {
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 800;
             color: #666;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
             display: block;
+            text-transform: uppercase;
         }
 
         .qty-controls {
@@ -224,14 +235,14 @@
         .btn-circle:active { background: #003556; }
 
         .qty-value {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 900;
-            min-width: 30px;
+            min-width: 25px;
             color: #000;
             text-align: center;
         }
 
-        /* --- REDESIGNED STICKY FOOTER --- */
+        /* --- STICKY FOOTER --- */
         .sticky-footer {
             position: fixed;
             bottom: 0;
@@ -240,7 +251,7 @@
             background: white;
             padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 20px));
             box-shadow: 0 -4px 15px rgba(0,0,0,0.1);
-            z-index: 100;
+            z-index: 1000;
             border-top: 1px solid #eee;
         }
 
@@ -324,7 +335,7 @@
             width: 100%;
             height: 100%;
             background: rgba(0,0,0,0.7);
-            z-index: 200;
+            z-index: 2000;
             padding: 20px;
         }
 
@@ -406,7 +417,7 @@
             </div>
         </div>
 
-        <div class="field-group" style="background: white; padding: 16px; border-radius: 16px; margin-bottom: 20px; box-shadow: var(--shadow-1);">
+        <div class="field-group" style="background: white; padding: 12px; border-radius: 16px; margin-bottom: 12px; box-shadow: var(--shadow-1);">
             <label>Deposit (জমা)</label>
             <input type="number" id="depositAmount" placeholder="জমা টাকার পরিমাণ">
         </div>
@@ -555,7 +566,7 @@
                         <div class="price-info">Ctn: ${p[1]} | Pcs: ${p[2]}</div>
                         <div class="interaction-row">
                             <div class="qty-box">
-                                <span class="qty-label">CARTON QTY</span>
+                                <span class="qty-label">Carton</span>
                                 <div class="qty-controls">
                                     <button class="btn-circle" onclick="updateQty(${i}, 'carton', -0.5)">−</button>
                                     <span class="qty-value" id="val-carton-${i}">${state[i].carton}</span>
@@ -563,7 +574,7 @@
                                 </div>
                             </div>
                             <div class="qty-box">
-                                <span class="qty-label">PIECE QTY</span>
+                                <span class="qty-label">Piece</span>
                                 <div class="qty-controls">
                                     <button class="btn-circle" onclick="updateQty(${i}, 'piece', -1)">−</button>
                                     <span class="qty-value" id="val-piece-${i}">${state[i].piece}</span>
