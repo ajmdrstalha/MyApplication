@@ -64,18 +64,20 @@
 
         .search-container {
             position: fixed;
-            top: 44px; /* Exactly below top-nav */
+            top: 44px;
             left: 0;
             right: 0;
             z-index: 999;
             background: #f4f7fa;
             padding: 6px 16px;
             box-shadow: 0 4px 6px -2px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 10px;
+            align-items: center;
         }
 
         .search-bar {
-            width: 100%;
-            max-width: 100%;
+            flex: 1;
             padding: 4px 16px;
             border: 2px solid var(--md-sys-color-outline);
             border-radius: 28px;
@@ -92,9 +94,25 @@
             box-shadow: 0 0 0 2px rgba(0,74,119,0.2);
         }
 
+        .settings-trigger {
+            background: white;
+            color: var(--md-sys-color-primary);
+            border: 2px solid var(--md-sys-color-primary);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-1);
+            cursor: pointer;
+            padding: 0;
+        }
+
         /* Container & Grid */
         .content {
-            padding: 100px 16px 180px 16px; /* Offset for fixed headers (44 + 48 approx) */
+            padding: 100px 16px 180px 16px;
             max-width: 600px;
             margin: 0 auto;
         }
@@ -327,7 +345,7 @@
         .btn-load { background: #7b1fa2; }
 
         /* Overlay Styles */
-        #historyOverlay {
+        .overlay {
             display: none;
             position: fixed;
             top: 0;
@@ -339,30 +357,32 @@
             padding: 20px;
         }
 
-        .history-content {
+        .overlay-content {
             background: white;
             width: 100%;
             max-width: 500px;
-            height: 80%;
-            margin: 40px auto;
+            height: 90%;
+            margin: 20px auto;
             border-radius: 24px;
-            padding: 24px;
+            padding: 20px;
             overflow-y: auto;
             position: relative;
         }
 
-        .history-header {
+        .overlay-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
             position: sticky;
-            top: 0;
+            top: -20px;
+            margin: -20px -20px 20px -20px;
+            padding: 20px;
             background: white;
-            padding-bottom: 10px;
+            z-index: 100;
+            border-bottom: 1px solid #eee;
         }
 
-        .history-item {
+        .history-item, .manage-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -370,12 +390,20 @@
             border-bottom: 1px solid #eee;
         }
 
-        .file-info {
-            font-weight: 700;
+        .manage-info {
+            flex: 1;
+            margin-right: 10px;
+        }
+
+        .manage-info strong {
+            display: block;
             font-size: 14px;
             color: #333;
-            word-break: break-all;
-            margin-right: 10px;
+        }
+
+        .manage-info span {
+            font-size: 12px;
+            color: #666;
         }
 
         .btn-view {
@@ -385,6 +413,37 @@
             border-radius: 20px;
             border: none;
             font-weight: 800;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: none;
+            font-size: 12px;
+            font-weight: 800;
+            color: white;
+        }
+
+        .btn-edit { background: #fbc02d; margin-right: 4px; }
+        .btn-delete { background: #d32f2f; }
+
+        .btn-add { background: var(--md-sys-color-primary); width: 100%; padding: 12px; margin-top: 10px; border-radius: 12px; border: none; color: white; font-weight: bold; }
+
+        .manage-form {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            border: 1px solid #eee;
+        }
+
+        .manage-form input {
+            width: 100%;
+            margin-bottom: 8px;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 14px;
         }
 
         /* PDF Printing helper */
@@ -403,6 +462,7 @@
 
     <div class="search-container">
         <input type="text" id="searchInput" class="search-bar" placeholder="পণ্য খুঁজুন (Search)...">
+        <button class="settings-trigger" onclick="showSettings()">⚙️</button>
     </div>
 
     <div class="content">
@@ -509,9 +569,9 @@
     </div>
 
     <!-- History Overlay -->
-    <div id="historyOverlay">
-        <div class="history-content">
-            <div class="history-header">
+    <div id="historyOverlay" class="overlay">
+        <div class="overlay-content">
+            <div class="overlay-header">
                 <h2 style="margin:0; color: var(--md-sys-color-primary); font-size: 18px;">Saved Reports</h2>
                 <button onclick="hideHistory()" style="background:none; border:none; font-size:28px; line-height: 1;">&times;</button>
             </div>
@@ -521,25 +581,56 @@
         </div>
     </div>
 
+    <!-- Settings Overlay -->
+    <div id="settingsOverlay" class="overlay">
+        <div class="overlay-content" id="settingsOverlayContent">
+            <div class="overlay-header">
+                <h2 style="margin:0; color: var(--md-sys-color-primary); font-size: 18px;">Product Management</h2>
+                <button onclick="hideSettings()" style="background:none; border:none; font-size:28px; line-height: 1;">&times;</button>
+            </div>
+
+            <!-- New Toggle Button at Top -->
+            <button class="btn-add" style="margin-bottom: 15px;" id="btnToggleForm" onclick="toggleManageForm()">+ Add New Product</button>
+
+            <!-- manageForm section implementation -->
+            <div class="manage-form" id="manageFormContainer" style="display: none;">
+                <h3 style="margin-top:0; font-size: 14px;" id="manageFormTitle">Add New Product</h3>
+                <input type="hidden" id="editIndex" value="-1">
+                <input type="text" id="newProductName" placeholder="Product Name (পণ্যের নাম)">
+                <input type="number" id="newCartonPrice" placeholder="Carton Price (কার্টুন মূল্য)">
+                <input type="number" id="newPiecePrice" placeholder="Piece Price (পিস মূল্য)">
+                <button class="btn-add" id="btnSaveProduct" onclick="saveProduct()">Add Product</button>
+                <button class="btn-action btn-reset" id="btnCancelEdit" style="width:100%; margin-top:10px; background: #666;" onclick="resetProductForm()">Cancel</button>
+            </div>
+
+            <div id="manageListContainer" style="margin-bottom: 20px;">
+                <!-- Loaded via JS -->
+            </div>
+
+            <button class="btn-action btn-reset" style="width:100%;" onclick="resetInventory()">Reset to Factory Default</button>
+        </div>
+    </div>
+
     <script>
-        const products = [
+        const defaultProducts = [
             ["ব্রেড ৭০০ গ্রাম", 372, 62], ["ব্রেড ৩৫০ গ্রাম", 405, 34], ["ব্রেড ২৫০ গ্রাম", 312, 26],
             ["ব্রেড ১৫০ গ্রাম", 320, 19], ["ব্রেড ৩০০ গ্রাম", 460, 39], ["ফেসবান", 480, 4],
             ["বাটারবান", 900, 8], ["মেগা বাটার", 550, 13], ["ভেনিলা বান", 900, 8],
             ["চকোলেট বান", 900, 8], ["হানিকম", 550, 12], ["ফ্যামেলি কেক", 1380, 23],
-            ["স্লাইস কেক", 940, 8], ["মেঘা লুস", 410, 12], ["ক্রিম রোল", 685, 12],
+            ["সলাইস কেক", 940, 8], ["মেঘা লুস", 410, 12], ["ক্রিম রোল", 685, 12],
             ["সেন্ডুস কেক", 540, 8], ["ক্রিম ফিল", 540, 8], ["ফ্রুট কেক", 960, 96],
             ["প্লেন কেক", 820, 82], ["মুরব্বা বান", 343, 12], ["ডোনাট", 873, 15],
             ["ঘি টোস্ট", 940, 20], ["ঘি পাতা", 720, 8], ["রাস্ক টোস্ট", 310, 52],
             ["রোমা", 940, 47], ["পিলো", 360, 8], ["লেয়ার কেক", 270, 4],
             ["বিস্কিট", 180, 4], ["মামা ১২", 460, 39], ["মামা ১০", 385, 39],
             ["মামা ছোট", 270, 90], ["মামা ভাঙা", 460, 39], ["মামা পাতা", 870, 8],
-            ["ড্রাই বড়", 675, 112], ["ড্রাই কেক P", 540, 8], ["ডোনাট ২০", 873, 16],
+            ["ড্রাই বড়", 675, 112], ["ড্রাই কেক P", 540, 8],
             ["কুকিস", 670, 112], ["সেরো", 552, 69], ["জাম ব্রেড", 364, 12],
             ["পাই কেক", 830, 12], ["রোমা বড়", 1340, 112], ["কোকোনাট", 735, 16],
             ["ড্রাই বিস্কুট", 282, 24], ["কিসমিস", 1275, 53], ["লাডু", 720, 60], ["শনপাপড়ি", 1800, 150], ["ফ্রুট বান", 525, 15]
         ];
 
+        let products = JSON.parse(localStorage.getItem('rgs_inventory')) || defaultProducts;
         let state = products.map(() => ({ carton: 0, piece: 0 }));
 
         function init() {
@@ -616,9 +707,6 @@
             document.getElementById('dueAmount').innerText = due;
         }
 
-        document.getElementById('searchInput').addEventListener('input', renderProducts);
-        document.getElementById('depositAmount').addEventListener('input', updateTotals);
-
         function resetForm() {
             state = products.map(() => ({ carton: 0, piece: 0 }));
             document.getElementById('depositAmount').value = '';
@@ -640,7 +728,8 @@
                 dsrName: dsrName,
                 saleDate: saleDate,
                 state: state,
-                deposit: document.getElementById('depositAmount').value
+                deposit: document.getElementById('depositAmount').value,
+                productSnapshot: products
             };
             const key = `draft_${dsrName.replace(/[^a-z0-9]/gi, '_')}_${saleDate}`;
             localStorage.setItem(key, JSON.stringify(draft));
@@ -654,9 +743,6 @@
 
         function renderDraftList() {
             const container = document.getElementById('fileListContainer');
-            const headerTitle = document.querySelector('.history-header h2');
-            headerTitle.innerText = 'Saved Drafts';
-
             container.innerHTML = '';
             let found = false;
             for (let i = 0; i < localStorage.length; i++) {
@@ -679,17 +765,24 @@
                     container.appendChild(item);
                 }
             }
-            if (!found) {
-                container.innerHTML = '<p style="text-align:center; padding:20px;">No saved drafts found.</p>';
-            }
+            if (!found) container.innerHTML = '<p style="text-align:center; padding:20px;">No saved drafts found.</p>';
         }
 
         function applyDraft(key) {
             const draft = JSON.parse(localStorage.getItem(key));
-            document.getElementById('dsrName').value = draft.dsrName;
-            document.getElementById('saleDate').value = draft.saleDate;
+            if (!draft) return;
+
+            document.getElementById('dsrName').value = draft.dsrName || '';
+            document.getElementById('saleDate').value = draft.saleDate || '';
             document.getElementById('depositAmount').value = draft.deposit || '';
-            state = draft.state;
+
+            if (Array.isArray(draft.state)) {
+                state = products.map((_, i) => {
+                    return draft.state[i] ? { ...draft.state[i] } : { carton: 0, piece: 0 };
+                });
+            } else {
+                state = products.map(() => ({ carton: 0, piece: 0 }));
+            }
 
             renderProducts();
             updateTotals();
@@ -729,8 +822,8 @@
             document.getElementById('pdfDue').innerText = dueValue;
 
             const capture = document.getElementById('pdfCapture');
-            const pdfHeader = document.getElementById('pdfHeader');
             const tbody = document.getElementById('pdfTableBody');
+            const pdfHeader = document.getElementById('pdfHeader');
             const summary = document.getElementById('pdfSummarySection');
             const footer = document.getElementById('pdfFooterSection');
 
@@ -774,7 +867,6 @@
 
             summary.style.display = 'flex';
             footer.style.display = 'block';
-
             if (capture.offsetHeight > 1050) {
                 summary.style.display = 'none';
                 footer.style.display = 'none';
@@ -784,15 +876,12 @@
                 summary.style.display = 'flex';
                 footer.style.display = 'block';
             }
-
             await addCurrentPageToPdf();
 
-            pdfHeader.style.display = 'block';
             capture.style.position = 'absolute';
             capture.style.left = '-9999px';
 
             const fileName = dsr.replace(/[^a-z0-9]/gi, '_') + "_" + date + ".pdf";
-
             if (window.AndroidInterface) {
                 const base64 = pdf.output('datauristring').split(',')[1];
                 window.AndroidInterface.downloadPdf(base64, fileName);
@@ -802,10 +891,146 @@
             }
         }
 
+        // --- PRODUCT MANAGEMENT ---
+        function showSettings() {
+            document.getElementById('settingsOverlay').style.display = 'block';
+            document.getElementById('manageFormContainer').style.display = 'none'; // HIDDEN BY DEFAULT
+            renderManageList();
+        }
+
+        function hideSettings() {
+            document.getElementById('settingsOverlay').style.display = 'none';
+            resetProductForm();
+        }
+
+        function toggleManageForm() {
+            const container = document.getElementById('manageFormContainer');
+            const toggleBtn = document.getElementById('btnToggleForm');
+
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+                toggleBtn.innerText = 'Close Form';
+            } else {
+                resetProductForm();
+                toggleBtn.innerText = '+ Add New Product';
+            }
+        }
+
+        function renderManageList() {
+            const container = document.getElementById('manageListContainer');
+            container.innerHTML = '';
+            products.forEach((p, i) => {
+                const item = document.createElement('div');
+                item.className = 'manage-item';
+                item.innerHTML = `
+                    <div class="manage-info">
+                        <strong>${p[0]}</strong>
+                        <span>Ctn: ${p[1]} | Pcs: ${p[2]}</span>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn-small btn-edit" onclick="editProduct(${i})">Edit</button>
+                        <button class="btn-small btn-delete" onclick="deleteProduct(${i})">Delete</button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function saveProduct() {
+            const name = document.getElementById('newProductName').value;
+            const ctn = parseFloat(document.getElementById('newCartonPrice').value);
+            const pcs = parseFloat(document.getElementById('newPiecePrice').value);
+            const index = parseInt(document.getElementById('editIndex').value);
+
+            if (!name || isNaN(ctn) || isNaN(pcs)) {
+                alert('Please fill all fields correctly.');
+                return;
+            }
+
+            if (index === -1) {
+                // Add new
+                products.push([name, ctn, pcs]);
+                state.push({ carton: 0, piece: 0 });
+            } else {
+                // Update existing
+                products[index] = [name, ctn, pcs];
+            }
+
+            saveAndRefresh();
+            resetProductForm();
+            alert(index === -1 ? 'Product added!' : 'Product updated!');
+        }
+
+        function editProduct(i) {
+            const p = products[i];
+            document.getElementById('newProductName').value = p[0];
+            document.getElementById('newCartonPrice').value = p[1];
+            document.getElementById('newPiecePrice').value = p[2];
+            document.getElementById('editIndex').value = i;
+
+            document.getElementById('manageFormTitle').innerText = 'Edit Product';
+            document.getElementById('btnSaveProduct').innerText = 'Update Product';
+
+            // AUTOMATICALLY SHOW FORM ON EDIT
+            const container = document.getElementById('manageFormContainer');
+            container.style.display = 'block';
+            document.getElementById('btnToggleForm').innerText = 'Close Form';
+            document.getElementById('btnCancelEdit').style.display = 'block';
+
+            // SMART AUTO-SCROLL LOGIC
+            const overlayContent = document.getElementById('settingsOverlayContent');
+            if (overlayContent) {
+                overlayContent.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            // AUTO FOCUS
+            setTimeout(() => {
+                const nameInput = document.getElementById('newProductName');
+                nameInput.focus();
+                // Move cursor to end of text
+                const val = nameInput.value;
+                nameInput.value = '';
+                nameInput.value = val;
+            }, 300);
+        }
+
+        function deleteProduct(i) {
+            if (confirm('Delete this product?')) {
+                products.splice(i, 1);
+                state.splice(i, 1);
+                saveAndRefresh();
+            }
+        }
+
+        function resetInventory() {
+            if (confirm('Restore to default 46 products? All custom products will be lost.')) {
+                products = JSON.parse(JSON.stringify(defaultProducts));
+                state = products.map(() => ({ carton: 0, piece: 0 }));
+                saveAndRefresh();
+            }
+        }
+
+        function saveAndRefresh() {
+            localStorage.setItem('rgs_inventory', JSON.stringify(products));
+            renderManageList();
+            renderProducts();
+            updateTotals();
+        }
+
+        function resetProductForm() {
+            document.getElementById('newProductName').value = '';
+            document.getElementById('newCartonPrice').value = '';
+            document.getElementById('newPiecePrice').value = '';
+            document.getElementById('editIndex').value = '-1';
+
+            document.getElementById('manageFormTitle').innerText = 'Add New Product';
+            document.getElementById('btnSaveProduct').innerText = 'Add Product';
+            document.getElementById('manageFormContainer').style.display = 'none';
+            document.getElementById('btnToggleForm').innerText = '+ Add New Product';
+        }
+
         function showHistory() {
             document.getElementById('historyOverlay').style.display = 'block';
-            const headerTitle = document.querySelector('.history-header h2');
-            headerTitle.innerText = 'Saved Reports';
             loadFiles();
         }
 
@@ -836,6 +1061,9 @@
                 container.innerHTML = '<p style="text-align:center; padding:20px;">Android Interface not found.</p>';
             }
         }
+
+        document.getElementById('searchInput').addEventListener('input', renderProducts);
+        document.getElementById('depositAmount').addEventListener('input', updateTotals);
 
         init();
     </script>
