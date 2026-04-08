@@ -570,7 +570,7 @@
 
     <!-- History Overlay -->
     <div id="historyOverlay" class="overlay">
-        <div class="overlay-content">
+        <div class="overlay-content" id="historyOverlayContent">
             <div class="overlay-header">
                 <h2 style="margin:0; color: var(--md-sys-color-primary); font-size: 18px;">Saved Reports</h2>
                 <button onclick="hideHistory()" style="background:none; border:none; font-size:28px; line-height: 1;">&times;</button>
@@ -624,10 +624,11 @@
             ["রোমা", 940, 47], ["পিলো", 360, 8], ["লেয়ার কেক", 270, 4],
             ["বিস্কিট", 180, 4], ["মামা ১২", 460, 39], ["মামা ১০", 385, 39],
             ["মামা ছোট", 270, 90], ["মামা ভাঙা", 460, 39], ["মামা পাতা", 870, 8],
-            ["ড্রাই বড়", 675, 112], ["ড্রাই কেক P", 540, 8],
+            ["ড্রাই বড়", 675, 112], ["ড্রাই কেক P", 540, 8], ["ডোনাট ২০", 873, 16],
             ["কুকিস", 670, 112], ["সেরো", 552, 69], ["জাম ব্রেড", 364, 12],
             ["পাই কেক", 830, 12], ["রোমা বড়", 1340, 112], ["কোকোনাট", 735, 16],
-            ["ড্রাই বিস্কুট", 282, 24], ["কিসমিস", 1275, 53], ["লাডু", 720, 60], ["শনপাপড়ি", 1800, 150], ["ফ্রুট বান", 525, 15]
+            ["ড্রাই বিস্কুট", 282, 24], ["কিসমিস", 1275, 53], ["লাডু", 720, 60], ["শনপাপড়ি", 1800, 150], ["ফ্রুট বান", 525, 15],
+            ["মিল্কব্রেড ৬০০", 410, 69], ["ক্রিম ব্রেড", 720, 7.5]
         ];
 
         let products = JSON.parse(localStorage.getItem('rgs_inventory')) || defaultProducts;
@@ -731,7 +732,7 @@
                 deposit: document.getElementById('depositAmount').value,
                 productSnapshot: products
             };
-            const key = `draft_${dsrName.replace(/[^a-z0-9]/gi, '_')}_${saleDate}`;
+            const key = `draft_${dsrName.replace(/[^a-z0-9]/gi, '_')}_${saleDate}_${Date.now()}`;
             localStorage.setItem(key, JSON.stringify(draft));
             alert('Draft saved successfully!');
         }
@@ -744,28 +745,38 @@
         function renderDraftList() {
             const container = document.getElementById('fileListContainer');
             container.innerHTML = '';
-            let found = false;
+            let drafts = [];
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
                 if (key.startsWith('draft_')) {
-                    found = true;
-                    const draft = JSON.parse(localStorage.getItem(key));
-                    const item = document.createElement('div');
-                    item.className = 'history-item';
-                    item.innerHTML = `
-                        <div class="file-info" style="font-size: 14px;">
-                            <strong>${draft.dsrName}</strong><br>
-                            <small>${draft.saleDate}</small>
-                        </div>
-                        <div style="display: flex; gap: 8px;">
-                            <button class="btn-view" style="background: #2e7d32; color: white;" onclick="applyDraft('${key}')">Load</button>
-                            <button class="btn-view" style="background: #d32f2f; color: white;" onclick="deleteDraft('${key}')">Delete</button>
-                        </div>
-                    `;
-                    container.appendChild(item);
+                    drafts.push({ key: key, data: JSON.parse(localStorage.getItem(key)) });
                 }
             }
-            if (!found) container.innerHTML = '<p style="text-align:center; padding:20px;">No saved drafts found.</p>';
+
+            // Sort by date descending
+            drafts.sort((a, b) => new Date(b.data.saleDate) - new Date(a.data.saleDate));
+
+            if (drafts.length === 0) {
+                container.innerHTML = '<p style="text-align:center; padding:20px;">No saved drafts found.</p>';
+                return;
+            }
+
+            drafts.forEach(item => {
+                const draft = item.data;
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `
+                    <div class="file-info" style="font-size: 14px;">
+                        <strong>${draft.dsrName}</strong><br>
+                        <small>${draft.saleDate}</small>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn-view" style="background: #2e7d32; color: white;" onclick="applyDraft('${item.key}')">Load</button>
+                        <button class="btn-view" style="background: #d32f2f; color: white;" onclick="deleteDraft('${item.key}')">Delete</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
         }
 
         function applyDraft(key) {
@@ -1003,7 +1014,7 @@
         }
 
         function resetInventory() {
-            if (confirm('Restore to default 46 products? All custom products will be lost.')) {
+            if (confirm('Restore to default products? All custom products will be lost.')) {
                 products = JSON.parse(JSON.stringify(defaultProducts));
                 state = products.map(() => ({ carton: 0, piece: 0 }));
                 saveAndRefresh();
@@ -1042,11 +1053,19 @@
             const container = document.getElementById('fileListContainer');
             container.innerHTML = '<p style="text-align:center; padding:20px;">Loading...</p>';
             if (window.AndroidInterface) {
-                const files = JSON.parse(window.AndroidInterface.getSavedFiles());
+                let files = JSON.parse(window.AndroidInterface.getSavedFiles());
                 if (files.length === 0) {
                     container.innerHTML = '<p style="text-align:center; padding:20px;">No saved reports found.</p>';
                     return;
                 }
+
+                // Sort reports by filename/date assuming format: DSRName_YYYY-MM-DD.pdf
+                files.sort((a, b) => {
+                    const dateA = a.split('_').pop().replace('.pdf', '');
+                    const dateB = b.split('_').pop().replace('.pdf', '');
+                    return new Date(dateB) - new Date(dateA);
+                });
+
                 container.innerHTML = '';
                 files.forEach(fileName => {
                     const item = document.createElement('div');
